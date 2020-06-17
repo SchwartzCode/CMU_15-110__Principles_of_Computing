@@ -24,21 +24,80 @@ def findMatchingParen(expr, index):
         if unclosed_count == 0:
             close_index = i
             break
-        print("INDEX:", i, "COUNT:", unclosed_count)
         i += 1
 
-
-    print("Return: ", close_index)
     return close_index
 
 def getTokenBounds(expr, start):
-    return
+    pos = [-1, -1]
+    tempDex = start
+    while(tempDex < len(expr)):
+        if expr[tempDex] != " ":
+            pos[0] = tempDex
+            break
+        else:
+            tempDex += 1
+
+    if(tempDex + 1 == len(expr)):
+        pos[1] = tempDex
+        return pos
+
+    while(tempDex < len(expr)):
+        if expr[tempDex] == " ":
+            pos[1] = tempDex - 1
+            break
+        else:
+            tempDex += 1
+
+    return pos
 
 def parseExpr(expr):
-    return
+    parsed = {"value" : "",
+              "children" : [] }
+    expr = expr.strip()
+
+    if expr[0] == "(" and findMatchingParen(expr, 0) == len(expr) - 1:
+        parsed = parseExpr(expr[1:-1])
+    elif " " not in expr:
+        parsed["value"] = expr
+    elif expr[:3] == "NOT":
+            parsed["value"] = "NOT"
+            parsed["children"] = [parseExpr(expr[3:])]
+    else:
+        if (expr[0] == "("):
+            leftEnd = findMatchingParen(expr, 0) + 1
+        else:
+            leftEnd = getTokenBounds(expr, 0)[1] + 1
+
+        left = expr[:leftEnd]
+
+        tempExpr = expr[leftEnd:].strip()
+        midEnd = getTokenBounds(tempExpr, 0)[1] + 1
+        mid = tempExpr[:midEnd]
+
+        tempExpr = tempExpr[midEnd:].strip()
+        right = tempExpr
+
+        parsed["value"] = mid
+        parsed["children"] = [parseExpr(left), parseExpr(right)]
+
+
+    return parsed
 
 def validateExpr(expr):
-    return
+    if not "value" in expr or not "children" in expr:
+        return False
+    elif expr["value"] == "NOT" and len(expr["children"]) != 1:
+        return False
+    elif expr["value"] == "AND" or expr["value"] == "OR" or expr["value"] == "XOR":
+        if len(expr["children"]) != 2:
+            return False
+
+    if "NOT" in expr["children"]:
+        return validateExpr(expr["children"])
+
+
+    return True
 
 def runProgram():
     return
