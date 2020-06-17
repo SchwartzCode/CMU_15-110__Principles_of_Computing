@@ -100,7 +100,22 @@ def validateExpr(expr):
     return True
 
 def runProgram():
-    return
+    print("Enter a boolean expression:")
+    expr = input()
+
+    try:
+        parsedExpr = parseExpr(expr)
+    except:
+        print("ERROR: Could not parse expression :(")
+
+    try:
+        worked = validateExpr(parsedExpr)
+    except:
+        print("ERROR: Could not validate parsed expression :/")
+
+    print("Valid Expression Succesfully Parsed :)")
+    print(parsedExpr)
+    return parsedExpr
 
 #### WEEK 1 TESTS ####
 
