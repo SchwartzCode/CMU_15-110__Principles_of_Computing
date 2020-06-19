@@ -105,17 +105,20 @@ def runProgram():
 
     try:
         parsedExpr = parseExpr(expr)
+        try:
+            worked = validateExpr(parsedExpr)
+            print("Valid Expression Succesfully Parsed :)")
+            #print(parsedExpr)
+            makeTruthTable(parsedExpr)
+            return parsedExpr
+        except:
+            print("ERROR: Could not validate parsed expression :/")
     except:
         print("ERROR: Could not parse expression :(")
 
-    try:
-        worked = validateExpr(parsedExpr)
-    except:
-        print("ERROR: Could not validate parsed expression :/")
 
-    print("Valid Expression Succesfully Parsed :)")
-    print(parsedExpr)
-    return parsedExpr
+
+
 
 #### WEEK 1 TESTS ####
 
@@ -228,21 +231,96 @@ def week1Tests():
     testParseExpr()
     testValidateExpr()
 
-week1Tests()
-runProgram()
+# passed all tests so commenting this out for the time being
+#week1Tests()
+#runProgram()
 
 #### CHECK-IN 2 ####
 
 def getLeaves(t):
-    return
+
+    childs = []
+    if t["children"] == []:
+        if (len(childs) == 0):
+            childs.append( t["value"] )
+    else:
+        for i in t["children"]:
+            for j in getLeaves(i):
+                childs.append(j)
+
+    # sort list of children
+    childs.sort()
+
+    #remove duplicates
+    for i in range(len(childs)):
+        j = i+1
+        while(j<len(childs)):
+            if childs[i] == childs[j]:
+                childs.pop(j)
+                i -= 1
+            j += 1
+
+    return childs
 
 def generateAllInputs(n):
-    return
+    if n < 1:
+        return [ [] ]
+    elif n == 1:
+        return [ [False], [True] ]
+    else:
+        vals = generateAllInputs(n-1)
+        new_list = []
+        for option in vals:
+            opposite = option.copy()
+            option.append(False)
+            new_list.append( option )
+            opposite.append(True)
+            new_list.append( opposite )
+
+
+    return new_list
 
 def evalTree(t, inputs):
-    return
+    if t["children"] == [ ]:
+        return inputs[ t["value"] ]
+    else:
+        if t["value"] == "NOT":
+            return not evalTree(t["children"][0], inputs)
+        elif t["value"] == "AND":
+            return evalTree(t["children"][0], inputs) and evalTree(t["children"][1], inputs)
+        elif t["value"] == "OR":
+            return evalTree(t["children"][0], inputs) or evalTree(t["children"][1], inputs)
+        elif t["value"] == "XOR":
+            return ( evalTree(t["children"][0], inputs) or evalTree(t["children"][1], inputs) ) and not ( evalTree(t["children"][0], inputs) and evalTree(t["children"][1], inputs) )
+
 
 def makeTruthTable(tree):
+    print("Truth table:")
+    inputs = getLeaves(tree)
+
+    inputOptions = generateAllInputs(len(inputs))
+
+    outputs = []
+
+    for i in inputs:
+        print(i, "| ", end='')
+    print("OUT")
+    print("=================")
+
+    for i in range(len(inputOptions)):
+        inputDict = {}
+        for j in range(len(inputOptions[i])):
+            if inputOptions[i][j] == True:
+                print(1, "| ", end='')
+            else:
+                print(0, "| ", end='')
+            inputDict[inputs[j]] = inputOptions[i][j]
+        output = evalTree(tree, inputDict)
+        if output == True:
+            print("1")
+        else:
+            print("0")
+        outputs.append(output)
     return
 
 #### WEEK 2 TESTS ####
@@ -380,7 +458,8 @@ def week2Tests():
     testEvalTree()
     testMakeTruthTable()
 
-week2Tests()
+# passed all tests so commenting this out for the time being
+#week2Tests()
 runProgram()
 
 #### FULL ASSIGNMENT ####
