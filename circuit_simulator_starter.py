@@ -53,7 +53,8 @@ def getTokenBounds(expr, start):
 
 def parseExpr(expr):
     parsed = {"value" : "",
-              "children" : [] }
+              "children" : [],
+              "powered" : False }
     expr = expr.strip()
 
     if expr[0] == "(" and findMatchingParen(expr, 0) == len(expr) - 1:
@@ -281,18 +282,21 @@ def generateAllInputs(n):
     return new_list
 
 def evalTree(t, inputs):
+
     if t["children"] == [ ]:
-        return inputs[ t["value"] ]
+        val = inputs[ t["value"] ]
     else:
         if t["value"] == "NOT":
-            return not evalTree(t["children"][0], inputs)
+            val = not evalTree(t["children"][0], inputs)
         elif t["value"] == "AND":
-            return evalTree(t["children"][0], inputs) and evalTree(t["children"][1], inputs)
+            val =  evalTree(t["children"][0], inputs) and evalTree(t["children"][1], inputs)
         elif t["value"] == "OR":
-            return evalTree(t["children"][0], inputs) or evalTree(t["children"][1], inputs)
+            val = evalTree(t["children"][0], inputs) or evalTree(t["children"][1], inputs)
         elif t["value"] == "XOR":
-            return ( evalTree(t["children"][0], inputs) or evalTree(t["children"][1], inputs) ) and not ( evalTree(t["children"][0], inputs) and evalTree(t["children"][1], inputs) )
+            val = ( evalTree(t["children"][0], inputs) or evalTree(t["children"][1], inputs) ) and not ( evalTree(t["children"][0], inputs) and evalTree(t["children"][1], inputs) )
 
+    t["powered"] = val
+    return val
 
 def makeTruthTable(tree):
     print("Truth table:")
@@ -460,30 +464,86 @@ def week2Tests():
 
 # passed all tests so commenting this out for the time being
 #week2Tests()
-runProgram()
+#runProgram()
 
 #### FULL ASSIGNMENT ####
 
 def makeModel(data):
+    data["expression"] = ""
+    data["tree"] = None
+    data["inputs"] = {}
+
     return
 
 def makeView(data, canvas):
+    expText = "Expression: " + data["expression"]
+    canvas.create_text(100, 550, text = expText, anchor=SW, font = "Times 12 bold")
+
+    if data["tree"] != None:
+        drawCircuit(data, canvas)
+
     return
 
 def keyPressed(data, event):
+    if event.keysym == "BackSpace":
+        if len(data["expression"]) > 0:
+            data["expression"] = data["expression"][:-1]
+    elif event.keysym == "Return":
+
+        try:
+            data["tree"] = parseExpr(data["expression"])
+            runInitialCircuit(data)
+        except:
+            print("ERROR! Could not parse expression: ")
+            print(data["expression"])
+    elif event.keysym == "Tab":
+        makeTruthTable(data["tree"])
+    else:
+        data["expression"] += event.char
+
     return
 
 def mousePressed(data, event):
+
+    for i in data["inputLocations"]:
+        if event.x > data["inputLocations"][i]["left"] and event.x < data["inputLocations"][i]["right"]:
+            if event.y > data["inputLocations"][i]["top"] and event.y < data["inputLocations"][i]["bottom"]:
+                #print("DETECTION!:", i)
+                data["inputs"][i] = not data["inputs"][i]
+                data["output"] = evalTree(data["tree"], data["inputs"])
     return
 
 
 def runInitialCircuit(data):
+
+    leaves = getLeaves(data["tree"])
+    leafDict = {}
+
+    for leaf in leaves:
+        leafDict[leaf] = False
+
+    data["inputs"] = leafDict
+
+    data["output"] = evalTree(data["tree"], data["inputs"])
+
     return
 
 def drawNode(canvas, value, x, y, size, lit):
+    hSize = size/2
+    if lit:
+        canvas.create_rectangle(x-hSize, y-hSize, x+hSize, y+hSize, fill='yellow')
+        canvas.create_text(x, y, text = value, font = "Times 14 bold")
+    else:
+        canvas.create_rectangle(x-hSize, y-hSize, x+hSize, y+hSize)
+        canvas.create_text(x, y, text = value, font = "Times 14 bold")
+
     return
 
 def drawWire(canvas, x1, y1, x2, y2, lit):
+    if lit:
+        canvas.create_line(x1, y1, x2, y2, fill='yellow')
+    else:
+        canvas.create_line(x1, y1, x2, y2)
     return
 
 #### WEEK 3 PROVIDED CODE ####
